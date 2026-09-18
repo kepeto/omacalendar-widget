@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import qs.Commons
 import qs.Ui
 import "../CalendarModel.js" as Model
@@ -46,12 +47,13 @@ Item {
       onClicked: root.monthRequested(-1)
     }
 
+      // Qt.locale() alone follows the shell's UI default; LC_TIME may be more specific.
     Text {
       textFormat: Text.PlainText
       width: Math.max(0, parent.width - parent.children[0].implicitWidth - parent.children[2].implicitWidth)
       anchors.verticalCenter: parent.verticalCenter
       horizontalAlignment: Text.AlignHCenter
-      text: Qt.formatDate(new Date(root.year, root.month, 1), "MMMM yyyy")
+      text: Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")).toString(new Date(root.year, root.month, 1), "LLLL yyyy")
       color: root.foreground
       font.family: root.fontFamily
       font.pixelSize: Style.font.title
@@ -81,7 +83,7 @@ Item {
         required property int modelData
         width: root.cellWidth
         // Use the active system locale; never force calendar labels to en_US.
-        text: String(Qt.locale().dayName(modelData === 0 ? 7 : modelData, Locale.NarrowFormat))
+        text: String(Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")).standaloneDayName(modelData === 0 ? 7 : modelData, Locale.ShortFormat)).replace(/\.$/, "")
         horizontalAlignment: Text.AlignHCenter
         color: Qt.darker(root.foreground, 1.45)
         font.family: root.fontFamily
@@ -118,7 +120,7 @@ Item {
         opacity: modelData.inMonth ? 1 : 0.42
 
         Accessible.role: Accessible.Button
-        Accessible.name: Qt.formatDate(modelData.date, "dddd, MMMM d, yyyy")
+        Accessible.name: Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")).toString(modelData.date, "dddd, MMMM d, yyyy")
           + (modelData.eventCount ? ", " + modelData.eventCount + " event" + (modelData.eventCount === 1 ? "" : "s") : "")
 
         Text {

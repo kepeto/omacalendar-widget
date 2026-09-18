@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import QtQuick.Controls
 import qs.Commons
 import "../CalendarModel.js" as Model
@@ -55,7 +56,7 @@ Item {
         width: root.dayWidth
         height: dayHeaders.height
         // Qt's format tokens are rendered with the active system locale.
-        text: Qt.formatDate(root.dayAt(index), root.dayCount === 1 ? "dddd, MMM d" : "ddd d")
+        text: Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")).toString(root.dayAt(index), root.dayCount === 1 ? "dddd, MMM d" : "ddd d")
         color: Model.dateKey(root.dayAt(index)) === Model.dateKey(new Date())
           ? Color.accent : root.foreground
         font.family: root.fontFamily
@@ -145,7 +146,7 @@ Item {
         Text {
           textFormat: Text.PlainText
           width: root.gutterWidth - Style.space(5)
-          text: Qt.formatTime(new Date(2000, 0, 1, hourRow.index, 0), "h ap")
+          text: Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")).toString(new Date(2000, 0, 1, hourRow.index, 0), Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")).timeFormat(Locale.ShortFormat))
           color: Qt.darker(root.foreground, 1.4)
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption
@@ -199,7 +200,7 @@ Item {
           anchors.fill: parent
           anchors.margins: Style.space(4)
           text: Model.eventTitle(parent.modelData.event) + "\n"
-            + Model.timeLabel(parent.modelData.event, Qt.locale())
+            + Model.timeLabel(parent.modelData.event, Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")))
           color: root.foreground
           font.family: root.fontFamily
           font.pixelSize: Style.font.caption

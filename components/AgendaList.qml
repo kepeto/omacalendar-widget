@@ -1,6 +1,7 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
+import Quickshell
 import QtQuick.Controls
 import qs.Commons
 import qs.Ui
@@ -8,6 +9,9 @@ import "../CalendarModel.js" as Model
 
 Item {
   id: root
+
+  readonly property string localeName: String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")
+  readonly property var activeLocale: Qt.locale(localeName)
 
   property var events: []
   property var calendars: []
@@ -92,7 +96,7 @@ Item {
           : "transparent"
 
       Accessible.role: Accessible.Button
-      Accessible.name: Model.eventTitle(modelData) + ", " + Model.timeLabel(modelData, Qt.locale())
+      Accessible.name: Model.eventTitle(modelData) + ", " + Model.timeLabel(modelData, root.activeLocale)
 
       Rectangle {
         anchors.left: parent.left
@@ -128,8 +132,8 @@ Item {
           width: parent.width
           text: {
             var label = root.showDate
-              ? Model.agendaTimeLabel(eventRow.modelData, Qt.locale(), new Date())
-              : Model.timeLabel(eventRow.modelData, Qt.locale())
+              ? Model.agendaTimeLabel(eventRow.modelData, root.activeLocale, new Date())
+              : Model.timeLabel(eventRow.modelData, root.activeLocale)
             var values = [label]
             if (eventRow.modelData.location) values.push(String(eventRow.modelData.location))
             if (eventRow.modelData.pending) values.push("Pending")

@@ -31,13 +31,13 @@
       {
         "key": "format",
         "type": "string",
-        "label": "Horizontal date and time format",
+        "label": "Horizontal date/time format (Qt locale pattern)",
         "defaultValue": "ddd HH:mm"
       },
       {
         "key": "verticalFormat",
         "type": "string",
-        "label": "Vertical date and time format",
+        "label": "Vertical date/time format (Qt locale pattern)",
         "defaultValue": "HH\n\u2014\nmm"
       },
       {

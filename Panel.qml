@@ -23,6 +23,10 @@ Panel {
   readonly property real bodyViewportHeight: panelScroll.height
   readonly property real bodyContentHeight: panelScroll.contentHeight
 
+  // Use LC_TIME explicitly: the shell UI may start with LANG=en_US while
+  // calendar labels are configured as id_ID.
+  readonly property string localeName: String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")
+  readonly property var activeLocale: Qt.locale(localeName)
   property date today: new Date()
   property date selectedDate: new Date()
   property int viewYear: selectedDate.getFullYear()
@@ -55,7 +59,7 @@ Panel {
     ? visibleEvents[selectedEventIndex] : null
   readonly property var upNext: Model.hasEvent(snapshot.upNext) ? snapshot.upNext : null
   readonly property bool hasCachedSnapshot: Number(snapshot.revision || 0) > 0
-  readonly property int weekStart: Model.normalizedWeekStart(setting("weekStart", null), Qt.locale().firstDayOfWeek)
+  readonly property int weekStart: Model.normalizedWeekStart(setting("weekStart", null), activeLocale.firstDayOfWeek)
   // IPC 2 snapshots compute this against a fixed window around now, so browsing
   // another month cannot make the bar/popup lose the actual current event.
   // Keep the local derivation as a compatibility fallback for older daemons.
@@ -443,8 +447,8 @@ Panel {
               Text {
                 textFormat: Text.PlainText
                 width: parent.width
-                // Qt formatting respects the user's active locale.
-                text: Qt.formatDate(root.selectedDate, "dddd, MMMM d")
+                // Format through the LC_TIME locale, not the shell UI locale.
+                text: root.activeLocale.toString(root.selectedDate, "dddd, MMMM d")
                 color: root.contentForeground
                 font.family: root.contentFontFamily
                 font.pixelSize: Style.font.title

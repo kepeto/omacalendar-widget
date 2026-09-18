@@ -10,6 +10,10 @@ BarWidget {
   id: root
   moduleName: "org.omacalendar.widget"
 
+  // LC_TIME can differ from LANG (for example LANG=en_US with LC_TIME=id_ID).
+  // Build the formatter from LC_TIME explicitly so the shell does not fall back to English.
+  readonly property string localeName: String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")
+  readonly property var activeLocale: Qt.locale(localeName)
   property date now: new Date()
   readonly property string privacy: String(setting("barPrivacy", "full"))
   readonly property string configuredFormat: vertical
@@ -20,8 +24,9 @@ BarWidget {
   readonly property var client: panelLoader.item ? panelLoader.item.client : null
   readonly property var rawUpNext: client && client.snapshot ? client.snapshot.upNext : null
   readonly property var upNext: Model.hasEvent(rawUpNext) ? rawUpNext : null
-  // Qt.formatDateTime uses the active system locale for localized tokens.
-  readonly property string timeText: Qt.formatDateTime(now, configuredFormat)
+  // Use Locale.toString(date, pattern) rather than Qt.formatDateTime(date, pattern),
+  // because this lets LC_TIME override a different process UI language.
+  readonly property string timeText: activeLocale.toString(now, configuredFormat)
   readonly property string eventTitle: privacy === "hidden" || !upNext ? "" : Model.eventTitle(upNext)
   readonly property string countdown: showCountdown && upNext ? Model.upNextLabel(upNext, now) : ""
   readonly property string meetingUrl: Model.meetingUrl(upNext)
@@ -38,6 +43,20 @@ BarWidget {
   readonly property real openPanelIndicatorWidth: button.labelWidth
   readonly property real openPanelIndicatorHeight: Math.max(Style.space(10), Math.round(Style.bar.iconSlot * 0.55))
 
+  function cycleFormat() {
+    var formats = vertical
+      ? ["HH\n—\nmm", "dd\nMMM\nHH:mm", "ddd\ndd\nMMM"]
+      : ["ddd HH:mm", "dddd d MMM HH:mm", "d MMMM yyyy · HH:mm", "HH:mm"]
+    var current = String(configuredFormat)
+    var index = formats.indexOf(current)
+    var next = formats[(index + 1 + formats.length) % formats.length]
+    var entry = { id: root.moduleName }
+    for (var key in root.settings) if (key !== "id") entry[key] = root.settings[key]
+    entry[vertical ? "verticalFormat" : "format"] = next
+    root.settings = entry
+    if (root.bar && root.bar.shell && typeof root.bar.shell.updateEntryInline === "function")
+      root.bar.shell.updateEntryInline(root.moduleName, entry)
+  }
   function injectPanel() {
     var target = panelLoader.item
     if (!target) return
@@ -88,14 +107,13 @@ BarWidget {
     verticalPadding: 8.75
     tooltipText: root.upNext
       ? (root.privacy === "hidden" ? (root.countdown || "Upcoming event") : Model.eventTitle(root.upNext))
-      : "Open OmaCalendar"
+      : "Click: calendar · Right-click: format · Middle-click: refresh"
     active: false
     Accessible.role: Accessible.Button
     Accessible.name: tooltipText
 
     onPressed: function(button) {
-      if (button === Qt.RightButton)
-        Quickshell.execDetached(["uwsm-app", "--", "omacalendar", "omacalendar://"])
+      if (button === Qt.RightButton) root.cycleFormat()
       else if (button === Qt.MiddleButton) root.refresh()
       else root.togglePanel()
     }

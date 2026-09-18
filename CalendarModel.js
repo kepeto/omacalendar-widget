@@ -89,9 +89,12 @@ function agendaAnchorIndex(events, selectedDate) {
 function agendaTimeLabel(event, locale, referenceDate) {
   var start = eventStart(event)
   if (!start) return ""
-  // Qt.formatDate applies the active system locale for weekday/month names.
-  var day = Qt.formatDate(start, "ddd, MMM d")
-  return day + " · " + timeLabel(event, locale || Qt.locale())
+  var activeLocale = locale || Qt.locale()
+  var reference = referenceDate instanceof Date ? referenceDate : new Date()
+  var day = dateKey(start) === dateKey(reference)
+    ? activeLocale.dayName(start.getDay() === 0 ? 7 : start.getDay(), Locale.LongFormat)
+    : activeLocale.toString(start, "ddd, MMM d")
+  return day + " · " + timeLabel(event, activeLocale)
 }
 
 function upcomingEvents(events, selectedDate, limit) {
@@ -276,22 +279,23 @@ function timelineLayout(events, startDate, dayCount) {
 
 function timeLabel(event, locale) {
   if (!event) return ""
-  if (event.allDay) return "ALL DAY"
+  if (event.allDay) return "All day"
   var start = eventStart(event)
   if (!start) return ""
-  return start.toLocaleTimeString(locale || Qt.locale(), Locale.ShortFormat)
+  var activeLocale = locale || Qt.locale()
+  return activeLocale.toString(start, activeLocale.timeFormat(Locale.ShortFormat))
 }
 
 function durationLabel(milliseconds) {
   if (!isFinite(milliseconds)) return ""
   var minutes = Math.round(milliseconds / 60000)
-  if (minutes <= 0) return "now"
-  if (minutes < 60) return "in " + minutes + "m"
+  if (minutes <= 0) return "Now"
+  if (minutes < 60) return "in " + minutes + " min"
   var hours = Math.floor(minutes / 60)
   var remainder = minutes % 60
-  if (hours < 24) return "in " + hours + "h" + (remainder ? " " + remainder + "m" : "")
+  if (hours < 24) return "in " + hours + " h" + (remainder ? " " + remainder + " min" : "")
   var days = Math.floor(hours / 24)
-  return "in " + days + "d"
+  return "in " + days + " d"
 }
 
 function upNextLabel(event, now) {
