@@ -89,10 +89,9 @@ function agendaAnchorIndex(events, selectedDate) {
 function agendaTimeLabel(event, locale, referenceDate) {
   var start = eventStart(event)
   if (!start) return ""
-  var reference = referenceDate instanceof Date ? referenceDate : new Date()
-  var day = dateKey(start) === dateKey(reference)
-    ? "Today" : Qt.formatDate(start, "ddd, MMM d")
-  return day + " · " + timeLabel(event, locale)
+  // Qt.formatDate applies the active system locale for weekday/month names.
+  var day = Qt.formatDate(start, "ddd, MMM d")
+  return day + " · " + timeLabel(event, locale || Qt.locale())
 }
 
 function upcomingEvents(events, selectedDate, limit) {

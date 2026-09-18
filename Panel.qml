@@ -443,6 +443,7 @@ Panel {
               Text {
                 textFormat: Text.PlainText
                 width: parent.width
+                // Qt formatting respects the user's active locale.
                 text: Qt.formatDate(root.selectedDate, "dddd, MMMM d")
                 color: root.contentForeground
                 font.family: root.contentFontFamily

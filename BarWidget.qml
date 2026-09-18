@@ -20,6 +20,7 @@ BarWidget {
   readonly property var client: panelLoader.item ? panelLoader.item.client : null
   readonly property var rawUpNext: client && client.snapshot ? client.snapshot.upNext : null
   readonly property var upNext: Model.hasEvent(rawUpNext) ? rawUpNext : null
+  // Qt.formatDateTime uses the active system locale for localized tokens.
   readonly property string timeText: Qt.formatDateTime(now, configuredFormat)
   readonly property string eventTitle: privacy === "hidden" || !upNext ? "" : Model.eventTitle(upNext)
   readonly property string countdown: showCountdown && upNext ? Model.upNextLabel(upNext, now) : ""

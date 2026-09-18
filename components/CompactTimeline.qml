@@ -54,6 +54,7 @@ Item {
         required property int index
         width: root.dayWidth
         height: dayHeaders.height
+        // Qt's format tokens are rendered with the active system locale.
         text: Qt.formatDate(root.dayAt(index), root.dayCount === 1 ? "dddd, MMM d" : "ddd d")
         color: Model.dateKey(root.dayAt(index)) === Model.dateKey(new Date())
           ? Color.accent : root.foreground

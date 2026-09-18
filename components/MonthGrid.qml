@@ -8,6 +8,7 @@ import "../CalendarModel.js" as Model
 Item {
   id: root
 
+  // Qt date formatting and locale names follow the user's active system locale.
   property int year: new Date().getFullYear()
   property int month: new Date().getMonth()
   property date today: new Date()
@@ -79,7 +80,8 @@ Item {
         textFormat: Text.PlainText
         required property int modelData
         width: root.cellWidth
-        text: String(Qt.locale("en_US").dayName(modelData === 0 ? 7 : modelData, Locale.NarrowFormat)).toUpperCase()
+        // Use the active system locale; never force calendar labels to en_US.
+        text: String(Qt.locale().dayName(modelData === 0 ? 7 : modelData, Locale.NarrowFormat))
         horizontalAlignment: Text.AlignHCenter
         color: Qt.darker(root.foreground, 1.45)
         font.family: root.fontFamily
