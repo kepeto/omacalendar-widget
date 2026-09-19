@@ -23,11 +23,14 @@ BarWidget {
   readonly property bool showCountdown: setting("showCountdown", true) === true
   readonly property var client: panelLoader.item ? panelLoader.item.client : null
   readonly property var rawUpNext: client && client.snapshot ? client.snapshot.upNext : null
-  readonly property var upNext: Model.hasEvent(rawUpNext) ? rawUpNext : null
+  readonly property var allEvents: client && client.snapshot && Array.isArray(client.snapshot.events)
+    ? client.snapshot.events : []
+  readonly property var upNext: Model.barEvent(allEvents, now, 24 * 60 * 60 * 1000, 6 * 60 * 60 * 1000)
+  readonly property string shortEventTitle: Model.truncateText(Model.eventTitle(upNext), 25)
   // Use Locale.toString(date, pattern) rather than Qt.formatDateTime(date, pattern),
   // because this lets LC_TIME override a different process UI language.
   readonly property string timeText: activeLocale.toString(now, configuredFormat)
-  readonly property string eventTitle: privacy === "hidden" || !upNext ? "" : Model.eventTitle(upNext)
+  readonly property string eventTitle: privacy === "hidden" || !upNext ? "" : shortEventTitle
   readonly property string countdown: showCountdown && upNext ? Model.upNextLabel(upNext, now) : ""
   readonly property string meetingUrl: Model.meetingUrl(upNext)
   readonly property string horizontalText: {
@@ -106,7 +109,7 @@ BarWidget {
     horizontalMargin: 8.75
     verticalPadding: 8.75
     tooltipText: root.upNext
-      ? (root.privacy === "hidden" ? (root.countdown || "Upcoming event") : Model.eventTitle(root.upNext))
+      ? (root.privacy === "hidden" ? (root.countdown || "Upcoming event") : root.shortEventTitle)
       : "Click: calendar · Right-click: format · Middle-click: refresh"
     active: false
     Accessible.role: Accessible.Button

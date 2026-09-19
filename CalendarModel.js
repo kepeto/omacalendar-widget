@@ -146,6 +146,62 @@ function eventStart(event) {
   return parseDate(event.start || event.startUtc || event.startDateTime)
 }
 
+function barEventStart(event) {
+  var start = eventStart(event)
+  if (!start) return null
+  if (!event.allDay) return start
+  return new Date(start.getFullYear(), start.getMonth(), start.getDate(), 0, 0, 0, 0)
+}
+
+function barEventEnd(event) {
+  var end = eventEnd(event)
+  if (event && event.allDay && event.startDate && event.endDate) {
+    var exclusive = parseDate(event.endDate)
+    if (exclusive) return new Date(exclusive.getFullYear(), exclusive.getMonth(), exclusive.getDate(), 0, 0, 0, 0)
+  }
+  return end
+}
+
+function barEvent(events, now, windowMilliseconds, cadenceMilliseconds) {
+  var current = now instanceof Date && !isNaN(now.getTime()) ? now : new Date()
+  var nowTime = current.getTime()
+  var horizon = nowTime + Number(windowMilliseconds || 24 * 60 * 60 * 1000)
+  var cadence = Number(cadenceMilliseconds || 6 * 60 * 60 * 1000)
+  var input = Array.isArray(events) ? events : []
+  var valid = input.filter(function(event) { return barEventStart(event) !== null })
+  var active = valid.filter(function(event) {
+    var start = barEventStart(event)
+    var end = barEventEnd(event)
+    var endTime = end ? end.getTime() : start.getTime() + 1
+    return start.getTime() <= nowTime && endTime > nowTime
+  })
+  var nearby = valid.filter(function(event) {
+    var startTime = barEventStart(event).getTime()
+    return startTime >= nowTime && startTime <= horizon
+  })
+  var candidates = active.concat(nearby).sort(function(left, right) {
+    return barEventStart(left).getTime() - barEventStart(right).getTime()
+  })
+  if (candidates.length > 0) return candidates[0]
+
+  var distant = valid.filter(function(event) {
+    return barEventStart(event).getTime() > horizon
+  }).sort(function(left, right) {
+    return barEventStart(left).getTime() - barEventStart(right).getTime()
+  })
+  if (distant.length === 0) return null
+  var slot = Math.floor(nowTime / cadence)
+  return distant[slot % distant.length]
+}
+
+function truncateText(value, maximum) {
+  var text = String(value || "")
+  var limit = Math.max(1, Number(maximum || 25))
+  if (text.length <= limit) return text
+  if (limit <= 3) return text.slice(0, limit)
+  return text.slice(0, limit - 3).replace(/\\s+$/, "") + "..."
+}
+
 function eventEnd(event) {
   if (!event) return null
   if (event.allDay) return parseDate(event.endDate)
