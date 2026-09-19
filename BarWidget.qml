@@ -25,7 +25,8 @@ BarWidget {
   readonly property var rawUpNext: client && client.snapshot ? client.snapshot.upNext : null
   readonly property var allEvents: client && client.snapshot && Array.isArray(client.snapshot.events)
     ? client.snapshot.events : []
-  readonly property var upNext: Model.barEvent(allEvents, now, 24 * 60 * 60 * 1000, 6 * 60 * 60 * 1000)
+  readonly property var upNext: Model.barEvent(allEvents, now,
+    24 * 60 * 60 * 1000, 6 * 60 * 60 * 1000, 15 * 60 * 1000)
   readonly property string shortEventTitle: Model.truncateText(Model.eventTitle(upNext), 25)
   // Use Locale.toString(date, pattern) rather than Qt.formatDateTime(date, pattern),
   // because this lets LC_TIME override a different process UI language.

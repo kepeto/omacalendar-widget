@@ -19,15 +19,18 @@ TestCase {
     compare(selected.id, "soon")
   }
 
-  function test_barEventRotatesDistantEventsBySixHourSlot() {
+  function test_barEventShowsOnlyEarliestDistantEventForFifteenMinutes() {
     var now = new Date(2026, 7, 28, 12, 0, 0)
     var events = [
       { id: "first", start: "2026-09-02T09:00:00", end: "2026-09-02T10:00:00" },
       { id: "second", start: "2026-09-03T09:00:00", end: "2026-09-03T10:00:00" }
     ]
-    var first = Model.barEvent(events, now, 24 * 60 * 60 * 1000, 6 * 60 * 60 * 1000)
-    var next = Model.barEvent(events, new Date(now.getTime() + 6 * 60 * 60 * 1000), 24 * 60 * 60 * 1000, 6 * 60 * 60 * 1000)
-    verify(first.id !== next.id)
+    var first = Model.barEvent(events, now, 24 * 60 * 60 * 1000,
+      6 * 60 * 60 * 1000, 15 * 60 * 1000)
+    var hidden = Model.barEvent(events, new Date(2026, 7, 28, 12, 20, 0),
+      24 * 60 * 60 * 1000, 6 * 60 * 60 * 1000, 15 * 60 * 1000)
+    compare(first.id, "first")
+    verify(hidden === null)
   }
 
   function test_truncateTextUsesEllipsisWithinLimit() {
