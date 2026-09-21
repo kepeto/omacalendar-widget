@@ -166,8 +166,8 @@ function barEvent(events, now, windowMilliseconds, cadenceMilliseconds, displayM
   var current = now instanceof Date && !isNaN(now.getTime()) ? now : new Date()
   var nowTime = current.getTime()
   var horizon = nowTime + Number(windowMilliseconds || 24 * 60 * 60 * 1000)
-  var cadence = Number(cadenceMilliseconds || 6 * 60 * 60 * 1000)
-  var display = Number(displayMilliseconds || 15 * 60 * 1000)
+  var cadence = Number(cadenceMilliseconds || 2 * 60 * 60 * 1000)
+  var display = Number(displayMilliseconds || 5 * 60 * 1000)
   var input = Array.isArray(events) ? events : []
   var valid = input.filter(function(event) { return barEventStart(event) !== null })
   var active = valid.filter(function(event) {
@@ -195,7 +195,7 @@ function barEvent(events, now, windowMilliseconds, cadenceMilliseconds, displayM
   // When nothing is happening within 24 hours, advertise only the earliest
   // distant event. Show it briefly at the start of each six-hour slot instead
   // of rotating through A/B/C or keeping A visible continuously.
-  var slotHour = Math.floor(current.getHours() / 6) * 6
+  var slotHour = Math.floor(current.getHours() / 2) * 2
   var slotStart = new Date(current.getFullYear(), current.getMonth(), current.getDate(), slotHour, 0, 0, 0).getTime()
   if (nowTime - slotStart >= display) return null
   return distant[0]
@@ -367,7 +367,10 @@ function upNextLabel(event, now) {
   var start = eventStart(event)
   var end = eventEnd(event)
   var current = now instanceof Date ? now : new Date()
-  if (start && end && current >= start && current < end) return "Now"
+  if (start && end && current >= start && current < end) {
+    var remainingMinutes = Math.max(1, Math.ceil((end.getTime() - current.getTime()) / 60000))
+    return "Now · ends in " + remainingMinutes + " min"
+  }
   return start ? durationLabel(start.getTime() - current.getTime()) : ""
 }
 

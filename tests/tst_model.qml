@@ -26,9 +26,9 @@ TestCase {
       { id: "second", start: "2026-09-03T09:00:00", end: "2026-09-03T10:00:00" }
     ]
     var first = Model.barEvent(events, now, 24 * 60 * 60 * 1000,
-      6 * 60 * 60 * 1000, 15 * 60 * 1000)
-    var hidden = Model.barEvent(events, new Date(2026, 7, 28, 12, 20, 0),
-      24 * 60 * 60 * 1000, 6 * 60 * 60 * 1000, 15 * 60 * 1000)
+      2 * 60 * 60 * 1000, 5 * 60 * 1000)
+    var hidden = Model.barEvent(events, new Date(2026, 7, 28, 12, 6, 0),
+      24 * 60 * 60 * 1000, 2 * 60 * 60 * 1000, 5 * 60 * 1000)
     compare(first.id, "first")
     verify(hidden === null)
   }
@@ -154,7 +154,7 @@ TestCase {
   function test_upNextLabels() {
     var now = new Date("2026-08-28T12:00:00Z")
     compare(Model.upNextLabel({ start: "2026-08-28T12:30:00Z", end: "2026-08-28T13:00:00Z" }, now), "in 30 min")
-    compare(Model.upNextLabel({ start: "2026-08-28T11:30:00Z", end: "2026-08-28T12:30:00Z" }, now), "Now")
+    compare(Model.upNextLabel({ start: "2026-08-28T11:30:00Z", end: "2026-08-28T12:30:00Z" }, now), "Now · ends in 30 min")
     compare(Model.upNextLabel(null, now), "No upcoming events")
   }
 

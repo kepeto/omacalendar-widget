@@ -53,7 +53,7 @@ Item {
       width: Math.max(0, parent.width - parent.children[0].implicitWidth - parent.children[2].implicitWidth)
       anchors.verticalCenter: parent.verticalCenter
       horizontalAlignment: Text.AlignHCenter
-      text: Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")).toString(new Date(root.year, root.month, 1), "LLLL yyyy")
+      text: Qt.locale(String(Quickshell.env("LC_TIME") || Quickshell.env("LC_ALL") || Quickshell.env("LANG") || "C")).toString(new Date(root.year, root.month, 1), "MMMM yyyy")
       color: root.foreground
       font.family: root.fontFamily
       font.pixelSize: Style.font.title
