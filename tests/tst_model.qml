@@ -10,13 +10,17 @@ TestCase {
     compare(Model.dateKey(null), "")
   }
 
-  function test_barEventPrefersCurrentAndNext24Hours() {
-    var now = new Date(2026, 7, 28, 12, 0, 0)
-    var selected = Model.barEvent([
-      { id: "later", title: "Later", start: "2026-08-29T13:00:00", end: "2026-08-29T14:00:00" },
-      { id: "soon", title: "Soon", start: "2026-08-28T18:00:00", end: "2026-08-28T19:00:00" }
-    ], now, 24 * 60 * 60 * 1000, 6 * 60 * 60 * 1000)
-    compare(selected.id, "soon")
+  function test_barEventPulsesNextEventUntilItIsWithinTwoHours() {
+    var event = { id: "tomorrow", title: "Tomorrow", start: "2026-09-22T15:00:00", end: "2026-09-22T16:00:00" }
+    var pulse = Model.barEvent([event], new Date(2026, 8, 21, 17, 0, 0),
+      24 * 60 * 60 * 1000, 2 * 60 * 60 * 1000, 5 * 60 * 1000, 2 * 60 * 60 * 1000)
+    var hidden = Model.barEvent([event], new Date(2026, 8, 21, 17, 6, 0),
+      24 * 60 * 60 * 1000, 2 * 60 * 60 * 1000, 5 * 60 * 1000, 2 * 60 * 60 * 1000)
+    var continuous = Model.barEvent([event], new Date(2026, 8, 22, 13, 0, 0),
+      24 * 60 * 60 * 1000, 2 * 60 * 60 * 1000, 5 * 60 * 1000, 2 * 60 * 60 * 1000)
+    compare(pulse.id, "tomorrow")
+    verify(hidden === null)
+    compare(continuous.id, "tomorrow")
   }
 
   function test_barEventShowsOnlyEarliestDistantEventForFifteenMinutes() {
@@ -25,9 +29,9 @@ TestCase {
       { id: "first", start: "2026-09-02T09:00:00", end: "2026-09-02T10:00:00" },
       { id: "second", start: "2026-09-03T09:00:00", end: "2026-09-03T10:00:00" }
     ]
-    var first = Model.barEvent(events, now, 24 * 60 * 60 * 1000,
-      2 * 60 * 60 * 1000, 5 * 60 * 1000)
-    var hidden = Model.barEvent(events, new Date(2026, 7, 28, 12, 6, 0),
+    var first = Model.barEvent(events, new Date(2026, 7, 28, 13, 0, 0),
+      24 * 60 * 60 * 1000, 2 * 60 * 60 * 1000, 5 * 60 * 1000)
+    var hidden = Model.barEvent(events, new Date(2026, 7, 28, 13, 6, 0),
       24 * 60 * 60 * 1000, 2 * 60 * 60 * 1000, 5 * 60 * 1000)
     compare(first.id, "first")
     verify(hidden === null)

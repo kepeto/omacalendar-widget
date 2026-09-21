@@ -162,12 +162,13 @@ function barEventEnd(event) {
   return end
 }
 
-function barEvent(events, now, windowMilliseconds, cadenceMilliseconds, displayMilliseconds) {
+function barEvent(events, now, windowMilliseconds, cadenceMilliseconds, displayMilliseconds, continuousWindowMilliseconds) {
   var current = now instanceof Date && !isNaN(now.getTime()) ? now : new Date()
   var nowTime = current.getTime()
   var horizon = nowTime + Number(windowMilliseconds || 24 * 60 * 60 * 1000)
   var cadence = Number(cadenceMilliseconds || 2 * 60 * 60 * 1000)
   var display = Number(displayMilliseconds || 5 * 60 * 1000)
+  var continuousWindow = Number(continuousWindowMilliseconds || 2 * 60 * 60 * 1000)
   var input = Array.isArray(events) ? events : []
   var valid = input.filter(function(event) { return barEventStart(event) !== null })
   var active = valid.filter(function(event) {
@@ -175,30 +176,41 @@ function barEvent(events, now, windowMilliseconds, cadenceMilliseconds, displayM
     var end = barEventEnd(event)
     var endTime = end ? end.getTime() : start.getTime() + 1
     return start.getTime() <= nowTime && endTime > nowTime
-  })
-  var nearby = valid.filter(function(event) {
-    var startTime = barEventStart(event).getTime()
-    return startTime >= nowTime && startTime <= horizon
-  })
-  var candidates = active.concat(nearby).sort(function(left, right) {
-    return barEventStart(left).getTime() - barEventStart(right).getTime()
-  })
-  if (candidates.length > 0) return candidates[0]
-
-  var distant = valid.filter(function(event) {
-    return barEventStart(event).getTime() > horizon
   }).sort(function(left, right) {
     return barEventStart(left).getTime() - barEventStart(right).getTime()
   })
-  if (distant.length === 0) return null
+  if (active.length > 0) return active[0]
 
-  // When nothing is happening within 24 hours, advertise only the earliest
-  // distant event. Show it briefly at the start of each six-hour slot instead
-  // of rotating through A/B/C or keeping A visible continuously.
-  var slotHour = Math.floor(current.getHours() / 2) * 2
+  var upcomingWithin24Hours = valid.filter(function(event) {
+    var startTime = barEventStart(event).getTime()
+    return startTime > nowTime && startTime <= horizon
+  }).sort(function(left, right) {
+    return barEventStart(left).getTime() - barEventStart(right).getTime()
+  })
+  var upcoming = upcomingWithin24Hours
+  if (upcoming.length === 0) {
+    upcoming = valid.filter(function(event) {
+      return barEventStart(event).getTime() > horizon
+    }).sort(function(left, right) {
+      return barEventStart(left).getTime() - barEventStart(right).getTime()
+    })
+  }
+  if (upcoming.length === 0) return null
+
+  var next = upcoming[0]
+  var untilStart = barEventStart(next).getTime() - nowTime
+  // Once the next event is within two hours, keep it visible continuously.
+  if (untilStart <= continuousWindow) return next
+
+  // Otherwise show only the single next event during the first five minutes
+  // of each two-hour wall-clock slot. It disappears between pulses.
+  // Pulse at the user's observed cadence: 01:00, 03:00, 05:00, ...
+  // This gives the requested 17:00, then 19:00 behavior.
+  var slotHour = Math.floor((current.getHours() - 1) / 2) * 2 + 1
+  if (current.getHours() === 0) slotHour = 0
   var slotStart = new Date(current.getFullYear(), current.getMonth(), current.getDate(), slotHour, 0, 0, 0).getTime()
   if (nowTime - slotStart >= display) return null
-  return distant[0]
+  return next
 }
 
 function truncateText(value, maximum) {
